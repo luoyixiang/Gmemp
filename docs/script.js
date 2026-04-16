@@ -1,96 +1,93 @@
 const API_BASE = "https://api-enhanced-eight-sigma.vercel.app";
-const musicLibrary = ["流行", "华语经典", "精选摇滚", "ACG热歌", "纯音乐催眠", "欧美金曲"];
+const keywords = ["流行", "古风", "经典", "ACG", "摇滚", "欧美流行", "粤语金曲"];
 
 let playlist = [];
 let currentIndex = 0;
 let sound = null;
 
+const bgOverlay = document.getElementById('bg-overlay');
 const titleText = document.getElementById('track-title');
 const artistText = document.getElementById('track-artist');
 const playlistUI = document.getElementById('playlist');
-const bgOverlay = document.getElementById('bg-overlay');
 
 window.onload = () => fetchRandomList();
-
 document.getElementById('random-btn').onclick = fetchRandomList;
 document.getElementById('next-btn').onclick = playNext;
 document.getElementById('prev-btn').onclick = playPrev;
 
 async function fetchRandomList() {
-    const randomKey = musicLibrary[Math.floor(Math.random() * musicLibrary.length)];
-    const randomOffset = Math.floor(Math.random() * 20); 
-    titleText.innerText = "正在同步云端列表...";
+    const key = keywords[Math.floor(Math.random() * keywords.length)];
+    titleText.innerText = "获取新列表中...";
     
     try {
-        const res = await fetch(`${API_BASE}/cloudsearch?keywords=${encodeURIComponent(randomKey)}&limit=30&offset=${randomOffset}`);
+        const res = await fetch(`${API_BASE}/cloudsearch?keywords=${encodeURIComponent(key)}&limit=30`);
         const data = await res.json();
         
         if (data.result && data.result.songs) {
-            // 【优化】过滤掉 fee=1 (VIP) 或 fee=4 (付费专辑) 的资源，提高有效性
-            playlist = data.result.songs.filter(song => song.fee !== 1 && song.fee !== 4);
+            // 过滤 VIP(1) 和 需要购买专辑(4) 的曲目
+            playlist = data.result.songs.filter(s => s.fee !== 1 && s.fee !== 4);
             
             if (playlist.length === 0) {
-                fetchRandomList(); // 如果过滤完没歌了，重新搜
+                fetchRandomList();
                 return;
             }
 
             renderPlaylist();
-            titleText.innerText = "列表已就绪";
-            artistText.innerText = `随机风格: ${randomKey}`;
-            
-            // 默认加载第一首的封面作为初始背景
-            updateBackground(playlist[0].id);
+            updateBackground(playlist[0].al.picUrl);
+            titleText.innerText = "发现: " + key;
+            artistText.innerText = "已加载 " + playlist.length + " 首歌曲";
         }
-    } catch (err) {
-        titleText.innerText = "网络异常";
+    } catch (e) {
+        titleText.innerText = "接口请求失败";
     }
 }
 
 function renderPlaylist() {
-    playlistUI.innerHTML = playlist.map((song, index) => `
-        <li onclick="playTrack(${index})" class="song-item" id="item-${index}">
-            ${song.name} - ${song.ar[0].name}
+    playlistUI.innerHTML = playlist.map((s, i) => `
+        <li onclick="playTrack(${i})" class="song-item" id="item-${i}">
+            ${s.name} - ${s.ar[0].name}
         </li>
     `).join('');
 }
 
-/**
- * 独立更新背景函数
- */
-async function updateBackground(id) {
-    try {
-        const res = await fetch(`${API_BASE}/song/detail?ids=${id}`);
-        const data = await res.json();
-        let picUrl = data.songs[0].al.picUrl;
-        if (picUrl) {
-            picUrl = picUrl.replace("http://", "https://") + "?param=500y500";
-            bgOverlay.style.backgroundImage = `url('${picUrl}')`;
-        }
-    } catch (e) { console.error("背景加载失败"); }
+function updateBackground(picUrl) {
+    if (!picUrl) return;
+    // 强制转换为 https 并使用 p1 节点，通常这是最稳定的 CDN 节点
+    let safeUrl = picUrl.replace(/http:\/\/p\d+/, "https://p1");
+    safeUrl = safeUrl.replace("http://", "https://");
+    
+    // 预加载图片后再更新，防止闪烁
+    const img = new Image();
+    img.src = `${safeUrl}?param=500y500`;
+    img.onload = () => {
+        bgOverlay.style.backgroundImage = `url('${img.src}')`;
+    };
 }
 
 async function playTrack(index) {
     if (index < 0 || index >= playlist.length) return;
     currentIndex = index;
     const song = playlist[index];
-    
-    // UI 反馈
+
+    // 更新 UI 状态
     document.querySelectorAll('.song-item').forEach(el => el.classList.remove('active'));
-    document.getElementById(`item-${index}`).classList.add('active');
+    const item = document.getElementById(`item-${index}`);
+    if (item) {
+        item.classList.add('active');
+        item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
     
-    titleText.innerText = "正在解码音频...";
+    updateBackground(song.al.picUrl);
+    titleText.innerText = "解析地址...";
     artistText.innerText = song.ar[0].name;
 
-    // 优先尝试切换背景
-    updateBackground(song.id);
-
     try {
-        const urlRes = await fetch(`${API_BASE}/song/url/v1?id=${song.id}&level=standard`);
-        const urlData = await urlRes.json();
-        let mp3Url = urlData.data[0].url;
+        const res = await fetch(`${API_BASE}/song/url/v1?id=${song.id}&level=standard`);
+        const data = await res.json();
+        let mp3Url = data.data[0].url;
 
-        if (!mp3Url || mp3Url === "") {
-            console.warn("资源失效，自动跳过");
+        if (!mp3Url) {
+            console.warn("无权限，跳过");
             playNext();
             return;
         }
@@ -102,12 +99,11 @@ async function playTrack(index) {
             src: [mp3Url],
             html5: true,
             autoplay: true,
-            format: ['mp3'],
-            onplay: () => { titleText.innerText = song.name; },
+            onplay: () => titleText.innerText = song.name,
             onend: () => playNext(),
             onloaderror: () => playNext()
         });
-    } catch (err) {
+    } catch (e) {
         playNext();
     }
 }
