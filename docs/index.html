@@ -10,24 +10,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 </head>
 <body>
+    <div id="bg-overlay" class="bg-overlay"></div>
 
-<div class="player-card">
-    <div class="info">
-        <h2 id="track-title">等待指令</h2>
-        <p id="track-artist">点击“随机发现”开始音乐之旅</p>
+    <div class="player-card">
+        <div class="info">
+            <h2 id="track-title">正在初始化...</h2>
+            <p id="track-artist">自动获取列表中</p>
+        </div>
+
+        <div class="controls">
+            <button id="prev-btn">上一首</button>
+            <button id="random-btn" class="primary-btn">随机发现</button>
+            <button id="next-btn">下一首</button>
+        </div>
+
+        <div class="list-container">
+            <ul id="playlist"></ul>
+        </div>
     </div>
 
-    <div class="controls">
-        <button id="prev-btn">上一首</button>
-        <button id="random-btn" class="primary-btn">随机发现</button>
-        <button id="next-btn">下一首</button>
-    </div>
-
-    <div class="list-container">
-        <ul id="playlist"></ul>
-    </div>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
