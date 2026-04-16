@@ -1,59 +1,31 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="description" content="Meekdai music player page with journal">
-  <meta property="og:title" content="Gmemp">
-  <meta property="og:description" content="Meekdai music player page with journal">
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="https://music.meekdai.com/">
-  <meta property="og:image" content="" />
-
-  <link rel="icon" href="https://blog.meekdai.com/favicon.svg">
-  <title>Gmemp</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Meekdai/Gmemp@v3.4.8/docs/player.css">
-  <!-- <link rel="stylesheet" href="./player.css"> -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Music Player</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 </head>
 <body>
-  <div id="title">
-    <span id="track"></span>
-    <div id="artist"></div>
-    <div id="timer">0:00</div>
-    <div id="duration">0:00</div>
-    <div id="post" style="display:none;"></div>
-  </div>
-  
-  <div class="controlsOuter">
-    <div class="controlsInner">
-      <div id="loading"></div>
-      <div class="btn" id="playBtn"></div>
-      <div class="btn" id="pauseBtn"></div>
-      <div class="btn" id="prevBtn"></div>
-      <div class="btn" id="nextBtn"></div>
+
+<div class="player-card">
+    <div class="info">
+        <h2 id="track-title">准备就绪</h2>
+        <p id="track-artist">点击随机发现开始</p>
     </div>
-    <div class="btn" id="playlistBtn"></div>
-    <div class="btn" id="postBtn"></div>
-    <div class="btn" id="waveBtn"></div>
-    <div class="btn" id="volumeBtn"></div>
-  </div>
 
-  <div id="progressBar"></div>
-  <div id="progress"></div>
-  <canvas id="waveCanvas"></canvas>
+    <div class="controls">
+        <button id="prev-btn">上一首</button>
+        <button id="random-btn" class="primary-btn">随机发现</button>
+        <button id="next-btn">下一首</button>
+    </div>
 
-  <div id="playlist">
-    <div id="list"></div>
-  </div>
+    <div class="list-container">
+        <ul id="playlist"></ul>
+    </div>
+</div>
 
-  <div id="volume" class="fadeout">
-    <div id="barFull" class="bar"></div>
-    <div id="barEmpty" class="bar"></div>
-    <div id="sliderBtn"></div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/Meekdai/Gmemp@v3.4.8/docs/player.js"></script>
-  <!-- <script src="./player.js"></script> -->
+<script src="script.js"></script>
 </body>
 </html>
